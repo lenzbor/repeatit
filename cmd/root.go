@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var cfgFile, lessons string
 var interactive bool
 
 // rootCmd represents the base command when called without any subcommands
@@ -61,11 +61,12 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.PersistentFlags().BoolVarP(&interactive, "interactive", "i", false, `If set, you will have to press Return to get the answer.
-	This allows you to be in a learning way or enforcing your knowledge. It lets you time to search in your
-	memory and answer when you feel ready.
-	If this flag is not set, you will not have to press the Return key and you
-	simply have to wait for a given time. Questions and answers flow with a time
-	interval between them. See -t for details about time.`)
+This allows you to be in a learning way or enforcing your knowledge. It lets you time to search in your
+memory and answer when you feel ready.
+If this flag is not set, you will not have to press the Return key and you
+simply have to wait for a given time. Questions and answers flow with a time
+interval between them. See -t for details about time.`)
+	rootCmd.Flags().StringVarP(&lessons, "lessons", "", "", "Tells which lessons you want to repeat.")
 }
 
 // initConfig reads in config file and ENV variables if set.
