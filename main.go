@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/lenzbor/repeatit/cmd"
+import "github.com/boris-lenzinger/repeatit/cmd"
 
 func main() {
 	cmd.Execute()
