@@ -61,7 +61,11 @@ The numbers can be dispatched as follow:
 		}
 		lessonNumbers := make([]string, len(lessonsRange))
 		for i := 0; i < len(lessonsRange); i++ {
-			lessonNumbers[i] = strconv.Itoa(lessonsRange[i])
+			s := strconv.Itoa(lessonsRange[i])
+			if lessonsRange[i] < 10 {
+				s = "0" + s
+			}
+			lessonNumbers[i] = s
 		}
 		topic := parsing.ParseTopic(f, datamodel.NewTopicParsingParameters())
 		tools.Debug(topic.String())
