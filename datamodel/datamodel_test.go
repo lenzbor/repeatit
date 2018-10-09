@@ -50,10 +50,17 @@ func TestConcatenate(t *testing.T) {
 // TestNewTopic valides the construction of a topic.
 func TestNewTopic(t *testing.T) {
 	topic := NewTopic()
-	if topic.list == nil {
-		t.Errorf("A new topic should not have its list empty.")
+	if topic.vocabulary == nil {
+		t.Errorf("A new topic should not have its vocabulary empty.")
 	}
-	count := topic.GetSubsectionsCount()
+	if topic.sentences == nil {
+		t.Errorf("A new topic should not have its sentences empty.")
+	}
+	count := topic.GetVocabularySubsectionsCount()
+	if count != 0 {
+		t.Errorf("Was expecting 0 but received a count of %d\n", count)
+	}
+	count = topic.GetSentencesSubsectionsCount()
 	if count != 0 {
 		t.Errorf("Was expecting 0 but received a count of %d\n", count)
 	}
