@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/boris-lenzinger/repeatit/tools"
+	"github.com/spf13/viper"
 
 	"github.com/boris-lenzinger/repeatit/datamodel"
 )
@@ -34,8 +35,10 @@ func AskQuestions(qa datamodel.QuestionsAnswers, p datamodel.InterrogationParame
 
 	var question, answer string
 	s := bufio.NewScanner(p.GetInputStream())
+	var indexAlreadyQuestionned map[int]int
 	for {
 		if idxQuestions%nbOfQuestions == 0 {
+			indexAlreadyQuestionned = make(map[int]int)
 			loopsCount++
 			if loopsCount > p.GetLimit() {
 				// if the qa chan is closed, then we have to close the others.
@@ -45,8 +48,19 @@ func AskQuestions(qa datamodel.QuestionsAnswers, p datamodel.InterrogationParame
 			}
 		}
 		if p.IsRandomMode() {
-			i = int(rand.Int31n(int32(nbOfQuestions)))
+			var present bool
+			for {
+				i = int(rand.Int31n(int32(nbOfQuestions)))
+				if _, present = indexAlreadyQuestionned[i]; !present {
+					break
+				}
+				if present && !viper.GetBool("avoidRepetition") {
+					break
+				}
+				// we need a new randon number...
+			}
 		}
+		indexAlreadyQuestionned[i] = i
 		question = qa.GetQuestion(i)
 		answer = qa.GetAnswer(i)
 		if p.IsReversedMode() {

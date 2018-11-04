@@ -57,6 +57,8 @@ type InterrogationParameters struct {
 	Publisher chan string
 	// Absolute path to the lesson file to use
 	lessonsFile string
+	// tells if we accept to have multiple times the same word asked in a loop or not
+	AvoidRepetition bool
 }
 
 // NewInterrogationParameters creates a default instance of the
@@ -75,17 +77,18 @@ func NewInterrogationParameters() InterrogationParameters {
 		loopCount = configuredLoopCount
 	}
 	return InterrogationParameters{
-		interactive: false,
-		wait:        DefaultInterrogationPause,
-		mode:        Random,
-		in:          os.Stdin,
-		out:         os.Stdout,
-		limit:       loopCount,
-		reversed:    false,
-		lessonsFile: "NoFileDefined",
-		Qachan:      make(chan string),
-		Publisher:   make(chan string),
-		Command:     make(chan string),
+		interactive:     false,
+		wait:            DefaultInterrogationPause,
+		mode:            Random,
+		in:              os.Stdin,
+		out:             os.Stdout,
+		limit:           loopCount,
+		reversed:        false,
+		lessonsFile:     "NoFileDefined",
+		Qachan:          make(chan string),
+		Publisher:       make(chan string),
+		Command:         make(chan string),
+		AvoidRepetition: true,
 	}
 }
 
