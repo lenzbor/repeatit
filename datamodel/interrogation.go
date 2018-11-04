@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 // InterrogationMode makes it possible to change the way to be questionned.
@@ -67,17 +69,23 @@ type InterrogationParameters struct {
 //   * the number of loops is 10
 //   * the interrogation is not in Jeopardy mode
 func NewInterrogationParameters() InterrogationParameters {
+	loopCount := DefaultLoopCount
+	configuredLoopCount := viper.GetInt("limit")
+	if configuredLoopCount != 0 {
+		loopCount = configuredLoopCount
+	}
 	return InterrogationParameters{
 		interactive: false,
 		wait:        DefaultInterrogationPause,
 		mode:        Random,
 		in:          os.Stdin,
 		out:         os.Stdout,
-		limit:       DefaultLoopCount,
+		limit:       loopCount,
 		reversed:    false,
 		lessonsFile: "NoFileDefined",
 		Qachan:      make(chan string),
 		Publisher:   make(chan string),
+		Command:     make(chan string),
 	}
 }
 
