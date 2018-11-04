@@ -4,15 +4,30 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/boris-lenzinger/repeatit/datamodel"
 	"github.com/boris-lenzinger/repeatit/tools"
+	"github.com/pkg/errors"
 )
+
+// ParseLanguageFile is reading a file on disk and builds a Topic based on
+// the content of file. Any underlying error encountered is reported.
+func ParseLanguageFile(pathToFile string, p datamodel.TopicParsingParameters) (datamodel.Topic, error) {
+	f, err := os.Open(pathToFile)
+	if err != nil {
+		return datamodel.Topic{}, errors.Wrapf(err, "error while opening the lang file %q", pathToFile)
+	}
+	return ParseTopic(f, p)
+}
 
 // ParseTopic is reading the data source and transforms it to a topic
 // structure.
-func ParseTopic(r io.Reader, p datamodel.TopicParsingParameters) datamodel.Topic {
+func ParseTopic(r io.Reader, p datamodel.TopicParsingParameters) (datamodel.Topic, error) {
+	if p.LessonAnnounce == "" || p.QaSep == "" || p.SentenceAnnounce == "" {
+		return datamodel.Topic{}, fmt.Errorf("One of the lesson announce, sentence announce or q/a separators is empty. Parsing of file will fail")
+	}
 	// Reading the file line by line
 	s := bufio.NewScanner(r)
 
@@ -27,10 +42,25 @@ func ParseTopic(r io.Reader, p datamodel.TopicParsingParameters) datamodel.Topic
 	var isVocabularySection, isSentencesSection bool
 	for i := 0; i < len(lines); i++ {
 		input := lines[i]
+		if i == 0 {
+			// This is the header of the file. It is structured as :
+			// #learnt;native
+			langs := strings.TrimPrefix(input, "#")
+			splitted := strings.Split(langs, p.QaSep)
+			if len(splitted) != 2 {
+				return datamodel.NewTopic(), fmt.Errorf("the header must match '#native SEPARATOR learnt' but found instead %q", input)
+			}
+			topic.NativeLanguage = strings.Trim(splitted[0], " ")
+			topic.LearnedLanguage = strings.Trim(splitted[1], " ")
+			continue
+		}
 		// Ignore empty lines
 		if len(input) > 0 {
 			split := strings.Split(input, p.QaSep)
 			switch len(split) {
+			// Length of split is not 1. This means that there no separator.
+			// So the line is may be a lesson announce or a sentence announce
+			// (which are currently the cases we support)
 			case 1:
 				if strings.HasPrefix(input, p.LessonAnnounce) {
 					tools.Debug(fmt.Sprintf("Found vocabulary delimiter: %s", input))
@@ -65,5 +95,5 @@ func ParseTopic(r io.Reader, p datamodel.TopicParsingParameters) datamodel.Topic
 			}
 		}
 	}
-	return topic
+	return topic, nil
 }

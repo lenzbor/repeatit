@@ -24,6 +24,7 @@ import (
 	"github.com/boris-lenzinger/repeatit/parsing"
 	"github.com/boris-lenzinger/repeatit/tools"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var interactive bool
@@ -36,7 +37,7 @@ var lessonsCmd = &cobra.Command{
 The numbers can be dispatched as follow:
   * n:m requires to repeat the lessons n to m
   * n,m requires the lesson n and m
-  * you can combine the above syntaxes to generate more complex combinations that match your needs
+  * you can combine the above syntaxes to generate complex combinations that match your needs
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
@@ -67,16 +68,18 @@ The numbers can be dispatched as follow:
 			}
 			lessonNumbers[i] = s
 		}
-		topic := parsing.ParseTopic(f, datamodel.NewTopicParsingParameters())
+		parsingParameters := datamodel.TopicParsingParameters{
+			LessonAnnounce:   viper.GetString("announcementForLessons"),
+			SentenceAnnounce: viper.GetString("announcementForSentences"),
+			QaSep:            viper.GetString("qaSep"),
+		}
+		topic, err := parsing.ParseTopic(f, parsingParameters)
+		if err != nil {
+			tools.NegativeStatus(fmt.Sprintf("Parsing of %q has failed due to %v", params.GetLessonsFile(), err))
+		}
 		tools.Debug(topic.String())
 		qa := topic.BuildVocabularyQuestionsSet(lessonNumbers...)
 		engine.AskQuestions(qa, params)
-	},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		fmt.Println("[lesson] Calling prerun")
-	},
-	PostRun: func(cmd *cobra.Command, args []string) {
-		fmt.Println("[lesson] Calling postrun")
 	},
 }
 

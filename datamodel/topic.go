@@ -2,13 +2,20 @@ package datamodel
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
 
 	"github.com/boris-lenzinger/repeatit/tools"
 )
 
 // Topic represents the list of subsections of the file with the questions
-// attached for that section.
+// attached for that section. Usually, a topic will be a lesson subdivided
+// in vocabulary, grammar, sentences, etc.
 type Topic struct {
+	// The language for the original words
+	LearnedLanguage string `json:"learned"`
+	// The language for the translation
+	NativeLanguage string `json:"native"`
 	// the map listing the vocabulary of the lessons
 	// (by number or name of lesson)
 	vocabulary map[string]QuestionsAnswers
@@ -157,6 +164,75 @@ func (topic Topic) BuildSentencesQuestionsSet(ids ...string) QuestionsAnswers {
 	}
 
 	return qa
+}
+
+// ShowSummary displays on user what is available  in this topic.
+func (topic Topic) ShowSummary() {
+	tools.WriteInCyan("  Content of the loaded resources\n")
+	fmt.Printf("    * Learned: %s\n", topic.LearnedLanguage)
+	fmt.Printf("    * Native: %s\n", topic.NativeLanguage)
+	fmt.Printf("      - Lessons available: %s", topic.computeLessonsRange())
+}
+
+// computeLessonRange returns an easy string representation for the lessons stored
+// in a topic. Instead of displaying 1, 2, 3, 4 for instance, it will return 1:4.
+// For 1,2,3,4,5,8,9,10 it will return 1:5,8:10
+func (topic Topic) computeLessonsRange() string {
+	lessonsID := make([]int, len(topic.vocabulary))
+	i := 0
+	var err error
+	for ID := range topic.vocabulary {
+		lessonsID[i], err = strconv.Atoi(ID)
+		if err != nil {
+			tools.Warningf("a lesson is referenced with %q which is not an integer", ID)
+		}
+		i++
+	}
+	sort.Ints(lessonsID)
+	return computeRangesOnArrayOfInts(lessonsID)
+}
+
+func computeRangesOnArrayOfInts(v []int) string {
+	rangeOfIDs := ""
+	var startOfSuite, latestContiguous int
+	// Then we ignore the zeroes
+	for i := 0; i < len(v); i++ {
+		if v[i] <= 0 {
+			continue
+		}
+		if rangeOfIDs == "" {
+			startOfSuite = v[i]
+			latestContiguous = startOfSuite
+			rangeOfIDs = strconv.Itoa(v[i])
+			continue
+		}
+		if v[i-1] == v[i] {
+			// duplicate in lessons number. Ignore
+			continue
+		}
+		// there is a first element. Let's check now if the current element is
+		// contiguous with the previous one...
+		if v[i-1]+1 == v[i] {
+			latestContiguous = v[i]
+			// Is contiguous. Check if next is still...
+			if i != len(v)-1 {
+				continue
+			}
+			// end is reached
+			rangeOfIDs += ":" + strconv.Itoa(latestContiguous)
+			break
+		}
+
+		// not contiguous
+		if startOfSuite == latestContiguous {
+			rangeOfIDs += "," + strconv.Itoa(v[i])
+		} else {
+			rangeOfIDs += ":" + strconv.Itoa(latestContiguous) + "," + strconv.Itoa(v[i])
+		}
+		startOfSuite = v[i]
+		latestContiguous = startOfSuite
+	}
+	return rangeOfIDs
 }
 
 // GetNumberOfWords returns the number of words stored in the structure

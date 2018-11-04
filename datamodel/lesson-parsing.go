@@ -1,10 +1,10 @@
 package datamodel
 
 const (
-	// Lesson is the string that is searched in the vocabulary file to
+	// LessonDelimiter is the string that is searched in the vocabulary file to
 	// delimit the lessons. The lesson number should be right after the
 	// delimiter, on the same line.
-	Lesson = "### Lesson "
+	LessonDelimiter = "### Lesson "
 
 	// DefaultQaSep is the default character used to separate questions
 	// from answers in the CSV file
@@ -37,7 +37,7 @@ type TopicParsingParameters struct {
 // to parse the CSV file containing the questions/answers.
 func NewTopicParsingParameters() TopicParsingParameters {
 	return TopicParsingParameters{
-		LessonAnnounce:   Lesson,
+		LessonAnnounce:   LessonDelimiter,
 		SentenceAnnounce: Sentences,
 		QaSep:            DefaultQaSep,
 	}

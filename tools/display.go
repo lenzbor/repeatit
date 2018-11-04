@@ -84,7 +84,14 @@ func Error(err error, msg string) {
 // Carriage return is added at the end of the text.
 func Info(msg string) {
 	whiteBold := color.New(color.FgWhite).Add(color.Bold)
-	whiteBold.Printf("%s\n", msg)
+	whiteBold.Printf("[INFO] %s\n", msg)
+}
+
+// Infof is the same as Info except that you can use a formatting string
+// with various arguments instead of having to use fmt.Sprintf.
+func Infof(format string, args ...interface{}) {
+	whiteBold := color.New(color.FgWhite).Add(color.Bold)
+	whiteBold.Printf(fmt.Sprintf("[INFO] "+format, args))
 }
 
 // TitleNoNewLine displays a bold text in white and a ':' so it can
@@ -112,6 +119,13 @@ func Warning(msg string) {
 	magenta.Printf("[WARN] %s\n", msg)
 }
 
+// Warningf is the same as Warning except that you can use a formatting string
+// with various arguments instead of having to use fmt.Sprintf.
+func Warningf(format string, args ...interface{}) {
+	magenta := color.New(color.FgMagenta)
+	magenta.Printf(fmt.Sprintf("[WARN] "+format, args))
+}
+
 // Debug gives a convenient and uniform way to show debug trace to the user console.
 // This function uses ASCII code to display color so it can make log files look
 // like a little bit funny. Use less -R to view log files with colors.
@@ -123,6 +137,15 @@ func Debug(msg string) {
 	}
 }
 
+// Debugf is the same as Debug but you can use the same syntax as with fmt functions
+// to display multiple elements.
+func Debugf(format string, args ...interface{}) {
+	if IsDebugActivated() {
+		yellow := color.New(color.FgYellow)
+		yellow.Printf(fmt.Sprintf("[DEBUG] "+format, args))
+	}
+}
+
 // Advise gives a convenient and uniform way to display advices to the end user.
 // This function uses ASCII code to display color so it can make log files look
 // like a little bit funny. Use less -R to view log files with colors.
@@ -130,6 +153,13 @@ func Debug(msg string) {
 func Advise(msg string) {
 	c := color.New(color.FgYellow)
 	c.Printf(fmt.Sprintf("[Advice] %s\n", msg))
+}
+
+// Advisef is the same as Advise but you can use the same syntax as with fmt functions
+// to display multiple elements.
+func Advisef(format string, args ...interface{}) {
+	c := color.New(color.FgYellow)
+	c.Printf(fmt.Sprintf("[Advice] "+format, args))
 }
 
 // RunAction gives a convenient and uniform way to announce an action to the end user.
