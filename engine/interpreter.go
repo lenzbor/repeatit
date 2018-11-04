@@ -2,9 +2,11 @@ package engine
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/boris-lenzinger/repeatit/parsing"
 
@@ -15,6 +17,7 @@ import (
 // StartEngine is starting the command interpretor.
 func StartEngine(t datamodel.Topic) {
 	t.ShowSummary()
+	rand.Seed(time.Now().UTC().UnixNano())
 
 loop:
 	for {
