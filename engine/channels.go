@@ -5,6 +5,7 @@ import (
 	"io"
 	"sync"
 
+	"github.com/boris-lenzinger/repeatit/tools"
 	"github.com/fatih/color"
 )
 
@@ -28,7 +29,8 @@ func fanOutChannel(wg *sync.WaitGroup, readFrom <-chan string, writeTo chan<- st
 	}
 }
 
-//
+// publishChanToWriter reads from a channel and writes what is read to the writer
+// passed in parameter.
 func publishChanToWriter(wg *sync.WaitGroup, readFrom <-chan string, out io.Writer, qCount int, maxLoops int) {
 	defer wg.Done()
 	itemsRead := 0
@@ -46,17 +48,20 @@ func publishChanToWriter(wg *sync.WaitGroup, readFrom <-chan string, out io.Writ
 			}
 			fmt.Fprintf(out, c.Sprintf("Loop (%d/%d)\n", currentLoop, maxLoops))
 		}
+		tools.Debugf("Reading from the channel %+v to publish the question and the answer to the good output", readFrom)
 		select {
 		case v, ok := <-readFrom:
 			if !ok {
+				fmt.Println("failed to read from channel")
 				return
 			}
 			itemsRead++
 			switch {
 			case itemsRead%2 == 1:
+				// this is the question
 				fmt.Fprintf(out, v)
-				// Questions asked. Must publish the answer now.
 			case itemsRead%2 == 0:
+				// This is the answer. We have to publish the answer at once.
 				fmt.Fprintf(out, "     --> "+v+"\n")
 				fmt.Fprintf(out, "---------------------------\n")
 			}

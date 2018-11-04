@@ -76,6 +76,8 @@ func NewInterrogationParameters() InterrogationParameters {
 		limit:       DefaultLoopCount,
 		reversed:    false,
 		lessonsFile: "NoFileDefined",
+		Qachan:      make(chan string),
+		Publisher:   make(chan string),
 	}
 }
 

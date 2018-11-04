@@ -27,6 +27,7 @@ func AskQuestions(qa datamodel.QuestionsAnswers, p datamodel.InterrogationParame
 		os.Exit(1)
 	}
 
+	// Handling channels in sub-goroutines
 	go fanOutChannel(&wg, p.Qachan, p.Publisher)
 	go publishChanToWriter(&wg, p.Publisher, p.GetOutputStream(), nbOfQuestions, p.GetLimit())
 	go fanOutChannel(&wg, p.Command, p.Publisher)
@@ -53,6 +54,7 @@ func AskQuestions(qa datamodel.QuestionsAnswers, p datamodel.InterrogationParame
 			question = qa.GetAnswer(i)
 			answer = qa.GetQuestion(i)
 		}
+		tools.Debugf("Pushing question %q to qachan", question)
 		p.Qachan <- fmt.Sprintf("%s", question)
 		if p.IsInteractive() {
 			if s.Scan() {

@@ -171,13 +171,13 @@ func (topic Topic) ShowSummary() {
 	tools.WriteInCyan("  Content of the loaded resources\n")
 	fmt.Printf("    * Learned: %s\n", topic.LearnedLanguage)
 	fmt.Printf("    * Native: %s\n", topic.NativeLanguage)
-	fmt.Printf("      - Lessons available: %s", topic.computeLessonsRange())
+	fmt.Printf("      - Lessons available: %s\n", topic.ComputeLessonsRange())
 }
 
-// computeLessonRange returns an easy string representation for the lessons stored
+// ComputeLessonsRange returns an easy string representation for the lessons stored
 // in a topic. Instead of displaying 1, 2, 3, 4 for instance, it will return 1:4.
 // For 1,2,3,4,5,8,9,10 it will return 1:5,8:10
-func (topic Topic) computeLessonsRange() string {
+func (topic Topic) ComputeLessonsRange() string {
 	lessonsID := make([]int, len(topic.vocabulary))
 	i := 0
 	var err error
