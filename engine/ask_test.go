@@ -9,30 +9,26 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/boris-lenzinger/repeatit/datamodel"
 )
 
-func getGenericInterrogationParameters() InterrogationParameters {
-	ip := InterrogationParameters{
-		interactive: false,
-		wait:        1 * time.Millisecond,
-		limit:       10,
-		mode:        linear,
-		qachan:      make(chan string),
-		command:     make(chan string),
-		publisher:   make(chan string),
-	}
+func getGenericInterrogationParameters() datamodel.InterrogationParameters {
+	ip := datamodel.NewInterrogationParameters()
+	ip.SetLinearMode()
+	ip.SetLimit(10)
+	ip.SetWaitTime(1 * time.Millisecond)
+
 	return ip
 }
 
-func getGenericUnattendedInterrogationParameters() InterrogationParameters {
-	ip := getGenericInterrogationParameters()
-	ip.interactive = false
-	return ip
+func getGenericUnattendedInterrogationParameters() datamodel.InterrogationParameters {
+	return getGenericInterrogationParameters()
 }
 
-func getGenericInteractiveInterrogationParameters() InterrogationParameters {
+func getGenericInteractiveInterrogationParameters() datamodel.InterrogationParameters {
 	ip := getGenericInterrogationParameters()
-	ip.interactive = true
+	ip.SetInteractive()
 	return ip
 }
 
@@ -136,7 +132,7 @@ func TestAskQuestionsInReverseAndUnattendedMode(t *testing.T) {
 }
 
 //
-func validateOutput(tpp TopicParsingParameters, questionsSet QuestionsAnswers, s bufio.Scanner, t *testing.T, reverseMode bool) {
+func validateOutput(tpp datamodel.TopicParsingParameters, questionsSet datamodel.QuestionsAnswers, s bufio.Scanner, t *testing.T, reverseMode bool) {
 
 	announcement, _ := regexp.Compile("^" + tpp.TopicAnnounce)
 	questionsCount := questionsSet.GetCount()
@@ -174,7 +170,7 @@ func validateOutput(tpp TopicParsingParameters, questionsSet QuestionsAnswers, s
 }
 
 //
-func validateRandomOutput(tpp TopicParsingParameters, questionsSet QuestionsAnswers, s bufio.Scanner, t *testing.T, reverseMode bool) {
+func validateRandomOutput(tpp datamodel.TopicParsingParameters, questionsSet datamodel.QuestionsAnswers, s bufio.Scanner, t *testing.T, reverseMode bool) {
 
 	announcement, _ := regexp.Compile("^" + tpp.TopicAnnounce)
 	questionsCount := questionsSet.GetCount()
