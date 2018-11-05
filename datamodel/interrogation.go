@@ -132,14 +132,30 @@ func (p *InterrogationParameters) GetInputStream() io.Reader {
 	return p.in
 }
 
+// SetInputStream sets the Reader from where we read the user input.
+func (p *InterrogationParameters) SetInputStream(r io.Reader) {
+	p.in = r
+}
+
 // GetOutputStream gets the Writer where questions will be written to.
 func (p *InterrogationParameters) GetOutputStream() io.Writer {
 	return p.out
 }
 
+// SetOutputStream changes the writer to which we are supposed to output the text.
+func (p *InterrogationParameters) SetOutputStream(w io.Writer) {
+	p.out = w
+}
+
 // IsReversedMode tells if the user wants that the left column are now answers and right column(s) are the questions
 func (p *InterrogationParameters) IsReversedMode() bool {
 	return p.reversed
+}
+
+// SetReverseMode requires to use the "Jeopardy" mode: you have the answer and
+// you must rebuild the question.
+func (p *InterrogationParameters) SetReverseMode() {
+	p.reversed = true
 }
 
 // GetListOfSubsections returns a string array containing all the subsections selected by
@@ -154,6 +170,11 @@ func (p *InterrogationParameters) GetListOfSubsections() []string {
 // GetLimit returns the number of loops for lessons to learn.
 func (p *InterrogationParameters) GetLimit() int {
 	return p.limit
+}
+
+// SetLimit updates the number of loops to perform.
+func (p *InterrogationParameters) SetLimit(newLimit int) {
+	p.limit = newLimit
 }
 
 // GetLessonsFile returns the absolute path to the lessons file that is used
@@ -171,4 +192,9 @@ func (p *InterrogationParameters) SetLessonsFile(path string) {
 // GetPauseTime returns the pause between each question in milliseconds.
 func (p *InterrogationParameters) GetPauseTime() time.Duration {
 	return p.wait
+}
+
+// SetPauseTime returns the pause between each question in milliseconds.
+func (p *InterrogationParameters) SetPauseTime(newWaitTime time.Duration) {
+	p.wait = newWaitTime
 }

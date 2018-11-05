@@ -11,13 +11,15 @@ import (
 	"time"
 
 	"github.com/boris-lenzinger/repeatit/datamodel"
+	"github.com/boris-lenzinger/repeatit/internal/tests"
+	"github.com/boris-lenzinger/repeatit/parsing"
 )
 
 func getGenericInterrogationParameters() datamodel.InterrogationParameters {
 	ip := datamodel.NewInterrogationParameters()
 	ip.SetLinearMode()
 	ip.SetLimit(10)
-	ip.SetWaitTime(1 * time.Millisecond)
+	ip.SetPauseTime(1 * time.Millisecond)
 
 	return ip
 }
@@ -40,21 +42,24 @@ func getGenericInteractiveInterrogationParameters() datamodel.InterrogationParam
 // if we are not linear. So this strategy should be enough.
 func TestAskQuestionsInUnattendedAndRandomMode(t *testing.T) {
 
-	r := strings.NewReader(getSampleCsvAsStream())
-	tpp := getTpp()
-	topic := ParseTopic(r, tpp)
+	r := strings.NewReader(tests.GetSampleCsvAsStream())
+	tpp := datamodel.NewTopicParsingParameters()
+	topic, err := parsing.ParseTopic(r, tpp)
+	if err != nil {
+		t.Fatalf("sample csv must be parsed with no error. Got the following: %v", err)
+	}
 
 	pr, pw := io.Pipe()
 	defer pw.Close()
 	ip := getGenericUnattendedInterrogationParameters()
-	ip.out = pw
-	ip.mode = random
+	ip.SetOutputStream(pw)
+	ip.SetRandomMode()
 
 	fmt.Println("    ****************")
 	fmt.Println("Test Ask Question in Linear Mode...")
 	fmt.Println("    ****************")
 
-	questionsSet := topic.BuildQuestionsSet()
+	questionsSet := topic.BuildVocabularyQuestionsSet()
 	var wg sync.WaitGroup
 	wg.Add(2)
 
@@ -66,7 +71,7 @@ func TestAskQuestionsInUnattendedAndRandomMode(t *testing.T) {
 
 	s := bufio.NewScanner(pr)
 
-	validateRandomOutput(tpp, questionsSet, *s, t, ip.reversed)
+	validateRandomOutput(tpp, questionsSet, *s, t, ip.IsReversedMode())
 }
 
 // TestAskQuestions tests that, in case of linear run of the questions,
@@ -74,20 +79,23 @@ func TestAskQuestionsInUnattendedAndRandomMode(t *testing.T) {
 // order.
 func TestAskQuestionsInUnattendedMode(t *testing.T) {
 
-	r := strings.NewReader(getSampleCsvAsStream())
-	tpp := getTpp()
-	topic := ParseTopic(r, tpp)
+	r := strings.NewReader(tests.GetSampleCsvAsStream())
+	tpp := datamodel.NewTopicParsingParameters()
+	topic, err := parsing.ParseTopic(r, tpp)
+	if err != nil {
+		t.Fatalf("sample csv must be parsed with no error. Received: %v", err)
+	}
 
 	pr, pw := io.Pipe()
 	defer pw.Close()
 	ip := getGenericUnattendedInterrogationParameters()
-	ip.out = pw
+	ip.SetOutputStream(pw)
 
 	fmt.Println("    ****************")
 	fmt.Println("Test Ask Question in Linear Mode...")
 	fmt.Println("    ****************")
 
-	questionsSet := topic.BuildQuestionsSet()
+	questionsSet := topic.BuildVocabularyQuestionsSet()
 	var wg sync.WaitGroup
 	wg.Add(2)
 
@@ -99,7 +107,7 @@ func TestAskQuestionsInUnattendedMode(t *testing.T) {
 
 	s := bufio.NewScanner(pr)
 
-	validateOutput(tpp, questionsSet, *s, t, ip.reversed)
+	validateOutput(tpp, questionsSet, *s, t, ip.IsReversedMode())
 }
 
 // TestAskQuestionsInReverseMode tests that, in case of linear and reverse run
@@ -107,16 +115,19 @@ func TestAskQuestionsInUnattendedMode(t *testing.T) {
 // the requested order.
 func TestAskQuestionsInReverseAndUnattendedMode(t *testing.T) {
 
-	r := strings.NewReader(getSampleCsvAsStream())
-	tpp := getTpp()
-	topic := ParseTopic(r, tpp)
+	r := strings.NewReader(tests.GetSampleCsvAsStream())
+	tpp := datamodel.NewTopicParsingParameters()
+	topic, err := parsing.ParseTopic(r, tpp)
+	if err != nil {
+		t.Fatalf("parsing sample csv must not return an error. Received: %v", err)
+	}
 
 	pr, pw := io.Pipe()
 	ip := getGenericUnattendedInterrogationParameters()
-	ip.out = pw
-	ip.reversed = true
+	ip.SetOutputStream(pw)
+	ip.SetReverseMode()
 
-	questionsSet := topic.BuildQuestionsSet()
+	questionsSet := topic.BuildVocabularyQuestionsSet()
 	go func() {
 		defer pw.Close()
 		AskQuestions(questionsSet, ip)
@@ -128,14 +139,14 @@ func TestAskQuestionsInReverseAndUnattendedMode(t *testing.T) {
 
 	s := bufio.NewScanner(pr)
 
-	validateOutput(tpp, questionsSet, *s, t, ip.reversed)
+	validateOutput(tpp, questionsSet, *s, t, ip.IsReversedMode())
 }
 
 //
 func validateOutput(tpp datamodel.TopicParsingParameters, questionsSet datamodel.QuestionsAnswers, s bufio.Scanner, t *testing.T, reverseMode bool) {
-
-	announcement, _ := regexp.Compile("^" + tpp.TopicAnnounce)
+	announcement := regexp.MustCompile("^" + tpp.LessonAnnounce)
 	questionsCount := questionsSet.GetCount()
+
 	i := 0
 	var (
 		isAnnounce     bool
@@ -149,16 +160,16 @@ func validateOutput(tpp datamodel.TopicParsingParameters, questionsSet datamodel
 	)
 	for s.Scan() {
 		isAnnounce = announcement.MatchString(s.Text())
-		isEmpty = emptyLine.MatchString(s.Text())
-		isLoop = loop.MatchString(s.Text())
-		isSeparator = separator.MatchString(s.Text())
-		isNbOfQ = nbOfQuestions.MatchString(s.Text())
-		isLimitReached = limitReached.MatchString(s.Text())
+		isEmpty = tests.EmptyLine.MatchString(s.Text())
+		isLoop = tests.Loop.MatchString(s.Text())
+		isSeparator = tests.Separator.MatchString(s.Text())
+		isNbOfQ = tests.NbOfQuestions.MatchString(s.Text())
+		isLimitReached = tests.LimitReached.MatchString(s.Text())
 		if !isAnnounce && !isEmpty && !isLoop && !isSeparator && !isNbOfQ && !isLimitReached {
 			// default is non reverse mode
-			expected = questionsSet.questions[i] + "     --> " + questionsSet.answers[i]
+			expected = questionsSet.GetQuestion(i) + "     --> " + questionsSet.GetAnswer(i)
 			if reverseMode {
-				expected = questionsSet.answers[i] + "     --> " + questionsSet.questions[i]
+				expected = questionsSet.GetAnswer(i) + "     --> " + questionsSet.GetQuestion(i)
 			}
 			computed = s.Text()
 			if computed != expected {
@@ -172,7 +183,7 @@ func validateOutput(tpp datamodel.TopicParsingParameters, questionsSet datamodel
 //
 func validateRandomOutput(tpp datamodel.TopicParsingParameters, questionsSet datamodel.QuestionsAnswers, s bufio.Scanner, t *testing.T, reverseMode bool) {
 
-	announcement, _ := regexp.Compile("^" + tpp.TopicAnnounce)
+	announcement, _ := regexp.Compile("^" + tpp.LessonAnnounce)
 	questionsCount := questionsSet.GetCount()
 	i := 0
 	matchCount := 0
@@ -189,16 +200,16 @@ func validateRandomOutput(tpp datamodel.TopicParsingParameters, questionsSet dat
 	)
 	for s.Scan() {
 		isAnnounce = announcement.MatchString(s.Text())
-		isEmpty = emptyLine.MatchString(s.Text())
-		isLoop = loop.MatchString(s.Text())
-		isSeparator = separator.MatchString(s.Text())
-		isNbOfQ = nbOfQuestions.MatchString(s.Text())
-		isLimitReached = limitReached.MatchString(s.Text())
+		isEmpty = tests.EmptyLine.MatchString(s.Text())
+		isLoop = tests.Loop.MatchString(s.Text())
+		isSeparator = tests.Separator.MatchString(s.Text())
+		isNbOfQ = tests.NbOfQuestions.MatchString(s.Text())
+		isLimitReached = tests.LimitReached.MatchString(s.Text())
 		if !isAnnounce && !isEmpty && !isLoop && !isSeparator && !isNbOfQ && !isLimitReached {
 			// default is non reverse mode
-			expected = questionsSet.questions[i] + "     --> " + questionsSet.answers[i]
+			expected = questionsSet.GetQuestion(i) + "     --> " + questionsSet.GetQuestion(i)
 			if reverseMode {
-				expected = questionsSet.answers[i] + "     --> " + questionsSet.questions[i]
+				expected = questionsSet.GetAnswer(i) + "     --> " + questionsSet.GetQuestion(i)
 			}
 			computed = s.Text()
 			if computed == expected {
@@ -218,21 +229,24 @@ func validateRandomOutput(tpp datamodel.TopicParsingParameters, questionsSet dat
 // return to get the matching answers and all of this in the requested order.
 func TestAskQuestionsInLinearAndInteractiveMode(t *testing.T) {
 
-	r := strings.NewReader(getSampleCsvAsStream())
-	tpp := getTpp()
-	topic := ParseTopic(r, tpp)
+	r := strings.NewReader(tests.GetSampleCsvAsStream())
+	tpp := datamodel.NewTopicParsingParameters()
+	topic, err := parsing.ParseTopic(r, tpp)
+	if err != nil {
+		t.Fatalf("parsing sample csv must not fail. Received: %v", err)
+	}
 
 	pr, pw := io.Pipe()
 	userIn, userOut := io.Pipe()
 	ip := getGenericInteractiveInterrogationParameters()
-	ip.in = userIn
-	ip.out = pw
+	ip.SetInputStream(userIn)
+	ip.SetOutputStream(pw)
 
 	fmt.Println("    ****************")
 	fmt.Println("    Test Ask Question in Linear Mode (pseudo-interactive)...")
 	fmt.Println("    ****************")
 
-	questionsSet := topic.BuildQuestionsSet()
+	questionsSet := topic.BuildVocabularyQuestionsSet()
 	questionsCount := questionsSet.GetCount()
 
 	go func() {
@@ -243,13 +257,13 @@ func TestAskQuestionsInLinearAndInteractiveMode(t *testing.T) {
 	go func() {
 		// Simulation of interactive mode: the "user" sends return
 		// carriage to command.
-		for i := 0; i < ip.limit*questionsCount; i++ {
+		for i := 0; i < ip.GetLimit()*questionsCount; i++ {
 			fmt.Fprintf(userOut, "\n")
 		}
 	}()
 
 	s := bufio.NewScanner(pr)
 
-	validateOutput(tpp, questionsSet, *s, t, ip.reversed)
+	validateOutput(tpp, questionsSet, *s, t, ip.IsReversedMode())
 
 }

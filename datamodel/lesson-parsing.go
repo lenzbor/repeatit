@@ -13,7 +13,7 @@ const (
 	// Sentences is the string that is searched in the vocabulary file to
 	// delimit the sentences. The lesson number of the sentences should be
 	// right after the delimiter, on the same line.
-	Sentences = "### Sentences Lesson"
+	SentencesDelimiter = "### Sentences Lesson"
 )
 
 // TopicParsingParameters is a data structure that helps to parse the lines that
@@ -38,7 +38,7 @@ type TopicParsingParameters struct {
 func NewTopicParsingParameters() TopicParsingParameters {
 	return TopicParsingParameters{
 		LessonAnnounce:   LessonDelimiter,
-		SentenceAnnounce: Sentences,
+		SentenceAnnounce: SentencesDelimiter,
 		QaSep:            DefaultQaSep,
 	}
 }
