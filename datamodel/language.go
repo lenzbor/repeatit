@@ -95,6 +95,8 @@ type Lesson struct {
 	Sentences  []Resource `json:"sentences"`
 }
 
+// NewLesson is the default constructor for a lesson. All fields, except ID,
+// are set to empty values.
 func NewLesson(ID int) Lesson {
 	return Lesson{
 		ID:         ID,
