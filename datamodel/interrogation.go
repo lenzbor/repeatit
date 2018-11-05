@@ -114,6 +114,19 @@ func (p *InterrogationParameters) IsRandomMode() bool {
 	return p.mode == Random
 }
 
+// SetLinearMode requires the interrogation to be done in linear mode instead of
+// random mode. Linear means that questions are asked in the same order as they
+// were described in the file.
+func (p *InterrogationParameters) SetLinearMode() {
+	p.mode = Linear
+}
+
+// SetRandomMode requires the interrogation to be done in random mode instead of
+// linear mode.
+func (p *InterrogationParameters) SetRandomMode() {
+	p.mode = Random
+}
+
 // GetInputStream gets the Reader from where we read the user input.
 func (p *InterrogationParameters) GetInputStream() io.Reader {
 	return p.in
