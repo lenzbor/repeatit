@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/boris-lenzinger/repeatit/tools"
 )
@@ -44,7 +45,6 @@ func (topic *Topic) GetVocabularySubsection(ID string) QuestionsAnswers {
 	qa, ok := topic.vocabulary[ID]
 	if !ok {
 		qa = NewQA()
-		topic.vocabulary[ID] = qa
 	}
 	return qa
 }
@@ -75,13 +75,13 @@ func (topic *Topic) IncreaseVocabularyCount() {
 // SetVocabularySubsection defines (or overrides if it already existed) a subsection
 // with a given ID and associates to it a list of questions.
 func (topic *Topic) SetVocabularySubsection(ID string, qa QuestionsAnswers) {
-	topic.vocabulary[ID] = qa
+	topic.vocabulary[strings.Trim(ID, " ")] = qa
 }
 
 // SetSentencesSubsection defines (or overrides if it already existed) a subsection
 // with a given ID and associates to it a list of questions.
 func (topic *Topic) SetSentencesSubsection(ID string, qa QuestionsAnswers) {
-	topic.sentences[ID] = qa
+	topic.sentences[strings.Trim(ID, " ")] = qa
 }
 
 // GetVocabularySubsectionsCount returns the number of vocabulary

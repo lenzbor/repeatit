@@ -37,7 +37,10 @@ loop:
 			numberOfDigitsForLessonsIDs := len(strconv.Itoa(t.GetVocabularySubsectionsCount()))
 			qa := t.BuildVocabularyQuestionsSet(tools.ConvertToStringsArray(selectedLessons, numberOfDigitsForLessonsIDs)...)
 			interrogParams := datamodel.NewInterrogationParameters()
-			AskQuestions(qa, interrogParams)
+			err = AskQuestions(qa, interrogParams)
+			if err != nil {
+				tools.NegativeStatus(fmt.Sprintf("%v", err))
+			}
 			fmt.Printf("Session is over...\n")
 		case userInput == "list":
 			fmt.Printf("Lessons available: %s\n", t.ComputeLessonsRange())

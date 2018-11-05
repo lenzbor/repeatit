@@ -1,6 +1,7 @@
 package parsing
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -33,6 +34,8 @@ func TestParseStream(t *testing.T) {
 		qa = topic.BuildVocabularyQuestionsSet(strconv.Itoa(i))
 		count = qa.GetCount()
 		if count != i {
+			fmt.Printf("QuestionsAnswers set: %v\n", qa)
+			fmt.Printf("Topic: %v\n", topic)
 			t.Errorf("We should have a list of %d questions for the global but we found %d\n", i, count)
 		}
 	}

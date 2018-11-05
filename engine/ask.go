@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"math/rand"
-	"os"
 	"sync"
 	"time"
 
@@ -16,7 +15,7 @@ import (
 
 // AskQuestions will question the user on the set of questions. The
 // parameter object will supply data to refine the questioning.
-func AskQuestions(qa datamodel.QuestionsAnswers, p datamodel.InterrogationParameters) {
+func AskQuestions(qa datamodel.QuestionsAnswers, p datamodel.InterrogationParameters) error {
 	loopsCount, i, idxQuestions := 0, 0, 0
 
 	var wg sync.WaitGroup
@@ -24,8 +23,7 @@ func AskQuestions(qa datamodel.QuestionsAnswers, p datamodel.InterrogationParame
 	nbOfQuestions := qa.GetCount()
 
 	if nbOfQuestions == 0 {
-		tools.NegativeStatus("Number of questions is zero. Please check your file.")
-		os.Exit(1)
+		return fmt.Errorf("Number of questions is zero. Please check your file")
 	}
 
 	// Handling channels in sub-goroutines
@@ -86,4 +84,5 @@ func AskQuestions(qa datamodel.QuestionsAnswers, p datamodel.InterrogationParame
 	}
 
 	wg.Wait()
+	return nil
 }
